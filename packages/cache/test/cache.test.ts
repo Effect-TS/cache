@@ -313,17 +313,16 @@ describe("Cache", () => {
             ),
             T.bind("value1", ({ cache }) => Cache.get_(cache, key1)),
             T.bind("value2", ({ cache }) => Cache.get_(cache, key2)),
-            T.bind("entries", ({ cache }) => Cache.entries(cache))
+            T.bind("entries", ({ cache }) =>
+              pipe(Cache.entries(cache), T.map(C.toArray))
+            )
           )
         )
 
         expect(value1).toBe(key1 * 10)
         expect(value2).toBe(key2 * 100)
-        console.log(C.toArray(entries))
-        expect(C.toArray(entries)).toEqual([
-          Tp.tuple(key1, value1),
-          Tp.tuple(key2, value2)
-        ])
+        expect(entries).toContainEqual(Tp.tuple(key1, value1))
+        expect(entries).toContainEqual(Tp.tuple(key2, value2))
       }))
   })
 
@@ -356,13 +355,14 @@ describe("Cache", () => {
             ),
             T.bind("value1", ({ cache }) => Cache.get_(cache, key1)),
             T.bind("value2", ({ cache }) => Cache.get_(cache, key2)),
-            T.bind("values", ({ cache }) => Cache.values(cache))
+            T.bind("values", ({ cache }) => pipe(Cache.values(cache), T.map(C.toArray)))
           )
         )
 
         expect(value1).toBe(key1 * 10)
         expect(value2).toBe(key2 * 100)
-        expect(C.toArray(values)).toEqual([value1, value2])
+        expect(values).toContainEqual(value1)
+        expect(values).toContainEqual(value2)
       }))
   })
 

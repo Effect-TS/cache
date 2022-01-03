@@ -245,11 +245,11 @@ export function makeWith_<Key, Environment, Error, Value>(
         }
 
         get values(): T.UIO<C.Chunk<Value>> {
-          return T.succeedWith(() => C.from(C.reverse(C.from(genValues()))))
+          return T.succeedWith(() => C.from(genValues()))
         }
 
         get entries(): T.UIO<C.Chunk<Tup.Tuple<[Key, Value]>>> {
-          return T.succeedWith(() => C.from(C.reverse(C.from(genEntries()))))
+          return T.succeedWith(() => C.from(genEntries()))
         }
 
         get cacheStats(): T.UIO<CacheStats> {
@@ -475,14 +475,17 @@ export function setValue_<Key, Error, Value>(
  * Sets the value in the cache.
  *
  * @ets_data_first setValue_
- *
  */
 export function setValue<Key, Value>(k: Key, v: Value) {
   return <Error>(self: Cache<Key, Error, Value>): T.UIO<void> => setValue_(self, k, v)
 }
 
-/*
+/**
  * Returns the approximate values in the cache.
+ *
+ * **Note**: the ordering of values returned from the `Cache` is not guaranteed.
+ * If a specific ordering must be imposed, is should be applied after values
+ * are retrieved from the `Cache`.
  */
 export function values<Key, Error, Value>(
   self: Cache<Key, Error, Value>
@@ -493,6 +496,10 @@ export function values<Key, Error, Value>(
 
 /**
  * Returns the approximate entries in the cache.
+ *
+ * **Note**: the ordering of entries returned from the `Cache` is not
+ * guaranteed. If a specific ordering must be imposed, is should be applied
+ * after entries are retrieved from the `Cache`.
  */
 export function entries<Key, Error, Value>(
   self: Cache<Key, Error, Value>
