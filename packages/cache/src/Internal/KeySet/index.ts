@@ -1,5 +1,7 @@
 // ets_tracing: off
 
+import * as St from "@effect-ts/core/Structural"
+
 import type { MapKey } from "../MapKey"
 
 // -----------------------------------------------------------------------------
@@ -20,7 +22,7 @@ export class KeySet<Key> {
    * Adds the specified key to the set.
    */
   add(key: MapKey<Key>): void {
-    if (key !== this.tail) {
+    if (!St.equals(key, this.tail)) {
       if (this.tail) {
         const previous = key.previous
         const next = key.next

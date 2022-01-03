@@ -4,6 +4,7 @@ import * as R from "@effect-ts/core/Effect/Random"
 import * as Ref from "@effect-ts/core/Effect/Ref"
 import * as E from "@effect-ts/core/Either"
 import { pipe } from "@effect-ts/core/Function"
+import * as St from "@effect-ts/core/Structural"
 import * as TE from "@effect-ts/jest/Test"
 
 import * as Cache from "../src/Cache"
@@ -168,6 +169,45 @@ describe("Cache", () => {
         )
 
         expect(actual).toEqual(expected)
+      }))
+
+    it("should handle non-primitive cache entries", () =>
+      T.gen(function* (_) {
+        class User implements St.HasHash, St.HasEquals {
+          constructor(readonly name: string, readonly age: number) {}
+
+          get [St.hashSym](): number {
+            return St.combineHash(St.hashString(this.name), St.hashNumber(this.age))
+          }
+
+          [St.equalsSym](that: unknown): boolean {
+            return that instanceof User && this[St.hashSym] === that[St.hashSym]
+          }
+        }
+
+        const user1 = new User("Ann", 40)
+        const user2 = new User("Jen", 20)
+        const user3 = new User("Ann", 40)
+
+        const { stats } = yield* _(
+          pipe(
+            T.do,
+            T.bind("salt", () => R.nextInt),
+            T.bind("cache", ({ salt }) =>
+              Cache.make(10, Number.MAX_SAFE_INTEGER, (key: User) =>
+                T.succeed(St.combineHash(St.hash(salt), St.hash(key)))
+              )
+            ),
+            T.tap(({ cache }) => Cache.get_(cache, user1)),
+            T.tap(({ cache }) => Cache.get_(cache, user2)),
+            T.tap(({ cache }) => Cache.get_(cache, user3)),
+            T.bind("stats", ({ cache }) => Cache.cacheStats(cache))
+          )
+        )
+
+        expect(stats.hits).toBe(1)
+        expect(stats.misses).toBe(2)
+        expect(stats.size).toBe(2)
       }))
   })
 
