@@ -5,6 +5,7 @@ import type * as Ex from "@effect-ts/core/Effect/Exit"
 import * as P from "@effect-ts/core/Effect/Promise"
 import { pipe } from "@effect-ts/core/Function"
 import * as O from "@effect-ts/core/Option"
+import * as St from "@effect-ts/core/Structural"
 import { matchTag_ } from "@effect-ts/core/Utils"
 
 import { CacheStats } from "../CacheStats"
@@ -308,26 +309,7 @@ export function makeWith_<Key, Environment, Error, Value>(
                       trackAccess(_.key)
                       trackHit()
                       if (hasExpired(_.timeToLive)) {
-                        if (cacheState.map.get(k) === value) {
-                          cacheState.map.delete(k)
-                        }
-                        return this.get(k)
-                      } else {
-                        return T.done(_.exit)
-                      }
-                    },
-                    Refreshing: (_) => {
-                      trackAccess(_.complete.key)
-                      trackHit()
-                      if (hasExpired(_.complete.timeToLive)) {
-                        return P.await(_.promise)
-                      } else {
-                        return T.done(_.complete.exit)
-                      }
-                    }
-                  })
-                )
-              }
+                      if (St.equals(cacheState.map.get(k), value)) {
             }),
             T.flatten
           )
@@ -381,38 +363,8 @@ export function makeWith_<Key, Environment, Error, Value>(
                 Pending: (_) => T.asUnit(P.await(_.promise)),
                 Complete: (_) => {
                   if (hasExpired(_.timeToLive)) {
-                    if (cacheState.map.get(key) === value) {
-                      cacheState.map.delete(key)
-                    }
-                    return T.asUnit(this.get(key))
-                  } else {
-                    // Only trigger the lookup if we're still the current
-                    // value, `completedResult`
-                    return pipe(
-                      lookupValueOf(
-                        _.key.value,
-                        environment,
-                        promise,
-                        timeToLive,
-                        cacheState,
-                        lookup
-                      ),
-                      T.whenM(
-                        T.succeedWith(() => {
-                          const current = cacheState.map.get(key)
-                          if (current === _) {
-                            cacheState.map.set(key, MapValue.refreshing(promise, _))
-                            return true
-                          } else {
-                            return false
-                          }
-                        })
-                      )
-                    )
-                  }
-                },
-                Refreshing: (_) => T.asUnit(P.await(_.promise))
-              })
+                  if (St.equals(cacheState.map.get(key), value)) {
+                        if (St.equals(current, _)) {
             }),
             T.flatten
           )
