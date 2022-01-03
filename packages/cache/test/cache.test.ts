@@ -171,6 +171,78 @@ describe("Cache", () => {
       }))
   })
 
+  describe("Setting Values", () => {
+    it("should insert the value into the cache", () =>
+      T.gen(function* (_) {
+        function inc(n: number): number {
+          return n * 10
+        }
+
+        function retrieve(multiplier: Ref.Ref<number>) {
+          return (key: number) =>
+            pipe(
+              multiplier,
+              Ref.updateAndGet(inc),
+              T.map((_) => key * _)
+            )
+        }
+
+        const seed = 1
+        const key = 123
+
+        const { value } = yield* _(
+          pipe(
+            T.do,
+            T.bind("ref", () => Ref.makeRef(seed)),
+            T.bind("cache", ({ ref }) =>
+              Cache.make(1, Number.MAX_SAFE_INTEGER, retrieve(ref))
+            ),
+            T.tap(({ cache }) => Cache.setValue_(cache, key, 15)),
+            T.tap(({ cache }) => Cache.get_(cache, key)),
+            T.bind("value", ({ cache }) => Cache.get_(cache, key))
+          )
+        )
+
+        expect(value).toBe(15)
+      }))
+
+    it("should update the cache with a new value", () =>
+      T.gen(function* (_) {
+        function inc(n: number): number {
+          return n * 10
+        }
+
+        function retrieve(multiplier: Ref.Ref<number>) {
+          return (key: number) =>
+            pipe(
+              multiplier,
+              Ref.updateAndGet(inc),
+              T.map((_) => key * _)
+            )
+        }
+
+        const seed = 1
+        const key = 123
+
+        const { value1, value2 } = yield* _(
+          pipe(
+            T.do,
+            T.bind("ref", () => Ref.makeRef(seed)),
+            T.bind("cache", ({ ref }) =>
+              Cache.make(1, Number.MAX_SAFE_INTEGER, retrieve(ref))
+            ),
+            T.bind("value1", ({ cache }) => Cache.get_(cache, key)),
+            T.tap(({ cache }) => Cache.setValue_(cache, key, 15)),
+            T.tap(({ cache }) => Cache.get_(cache, key)),
+            T.bind("value2", ({ cache }) => Cache.get_(cache, key))
+          )
+        )
+
+        expect(value1).toBe(key * 10)
+        expect(value2).toBe(15)
+      }))
+  })
+
   describe("Refreshes", () => {
     it("should update the cache with a new value", () =>
       T.gen(function* (_) {
