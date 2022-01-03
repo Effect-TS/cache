@@ -1,10 +1,11 @@
 import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
-import * as Tup from "@effect-ts/core/Collections/Immutable/Tuple"
+import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
 import * as T from "@effect-ts/core/Effect"
 import * as R from "@effect-ts/core/Effect/Random"
 import * as Ref from "@effect-ts/core/Effect/Ref"
 import * as E from "@effect-ts/core/Either"
 import { pipe } from "@effect-ts/core/Function"
+import * as St from "@effect-ts/core/Structural"
 import * as TE from "@effect-ts/jest/Test"
 
 import * as Cache from "../src/Cache"
@@ -170,6 +171,45 @@ describe("Cache", () => {
 
         expect(actual).toEqual(expected)
       }))
+
+    it("should handle non-primitive cache entries", () =>
+      T.gen(function* (_) {
+        class User implements St.HasHash, St.HasEquals {
+          constructor(readonly name: string, readonly age: number) {}
+
+          get [St.hashSym](): number {
+            return St.combineHash(St.hashString(this.name), St.hashNumber(this.age))
+          }
+
+          [St.equalsSym](that: unknown): boolean {
+            return that instanceof User && this[St.hashSym] === that[St.hashSym]
+          }
+        }
+
+        const user1 = new User("Ann", 40)
+        const user2 = new User("Jen", 20)
+        const user3 = new User("Ann", 40)
+
+        const { stats } = yield* _(
+          pipe(
+            T.do,
+            T.bind("salt", () => R.nextInt),
+            T.bind("cache", ({ salt }) =>
+              Cache.make(10, Number.MAX_SAFE_INTEGER, (key: User) =>
+                T.succeed(St.combineHash(St.hash(salt), St.hash(key)))
+              )
+            ),
+            T.tap(({ cache }) => Cache.get_(cache, user1)),
+            T.tap(({ cache }) => Cache.get_(cache, user2)),
+            T.tap(({ cache }) => Cache.get_(cache, user3)),
+            T.bind("stats", ({ cache }) => Cache.cacheStats(cache))
+          )
+        )
+
+        expect(stats.hits).toBe(1)
+        expect(stats.misses).toBe(2)
+        expect(stats.size).toBe(2)
+      }))
   })
 
   describe("Setting Values", () => {
@@ -273,13 +313,16 @@ describe("Cache", () => {
             ),
             T.bind("value1", ({ cache }) => Cache.get_(cache, key1)),
             T.bind("value2", ({ cache }) => Cache.get_(cache, key2)),
-            T.bind("entries", ({ cache }) => Cache.entries(cache))
+            T.bind("entries", ({ cache }) =>
+              pipe(Cache.entries(cache), T.map(C.toArray))
+            )
           )
         )
 
         expect(value1).toBe(key1 * 10)
         expect(value2).toBe(key2 * 100)
-        expect([...entries]).toEqual([Tup.tuple(key1, value1), Tup.tuple(key2, value2)])
+        expect(entries).toContainEqual(Tp.tuple(key1, value1))
+        expect(entries).toContainEqual(Tp.tuple(key2, value2))
       }))
   })
 
@@ -312,13 +355,14 @@ describe("Cache", () => {
             ),
             T.bind("value1", ({ cache }) => Cache.get_(cache, key1)),
             T.bind("value2", ({ cache }) => Cache.get_(cache, key2)),
-            T.bind("values", ({ cache }) => Cache.values(cache))
+            T.bind("values", ({ cache }) => pipe(Cache.values(cache), T.map(C.toArray)))
           )
         )
 
         expect(value1).toBe(key1 * 10)
         expect(value2).toBe(key2 * 100)
-        expect([...values]).toEqual([value1, value2])
+        expect(values).toContainEqual(value1)
+        expect(values).toContainEqual(value2)
       }))
   })
 

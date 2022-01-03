@@ -1,12 +1,14 @@
 // ets_tracing: off
 
 import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
+import * as HM from "@effect-ts/core/Collections/Immutable/HashMap"
 import * as Tup from "@effect-ts/core/Collections/Immutable/Tuple"
 import * as T from "@effect-ts/core/Effect"
 import * as Ex from "@effect-ts/core/Effect/Exit"
 import * as P from "@effect-ts/core/Effect/Promise"
 import { pipe } from "@effect-ts/core/Function"
 import * as O from "@effect-ts/core/Option"
+import * as St from "@effect-ts/core/Structural"
 import { matchTag_ } from "@effect-ts/core/Utils"
 
 import { CacheStats } from "../CacheStats"
@@ -182,7 +184,8 @@ export function makeWith_<Key, Environment, Error, Value>(
           while (loop) {
             const key = cacheState.keys.remove()
             if (key) {
-              if (cacheState.map.delete(key.value)) {
+              if (HM.has_(cacheState.map, key.value)) {
+                cacheState.map = HM.remove_(cacheState.map, key.value)
                 size = size - 1
                 loop = size > capacity
               }
@@ -203,7 +206,7 @@ export function makeWith_<Key, Environment, Error, Value>(
       }
 
       function* genEntries() {
-        for (const [k, v] of cacheState.map.entries()) {
+        for (const [k, v] of cacheState.map) {
           if (v._tag === "Complete" && v.exit._tag === "Success") {
             yield Tup.tuple(k, v.exit.value)
           }
@@ -211,7 +214,7 @@ export function makeWith_<Key, Environment, Error, Value>(
       }
 
       function* genValues() {
-        for (const v of cacheState.map.values()) {
+        for (const [, v] of cacheState.map) {
           if (v._tag === "Complete" && v.exit._tag === "Success") {
             yield v.exit.value
           }
@@ -228,7 +231,8 @@ export function makeWith_<Key, Environment, Error, Value>(
             const now = Date.now()
             const lookupResult = Ex.succeed(v) as Ex.Exit<Error, Value>
 
-            cacheState.map.set(
+            cacheState.map = HM.set_(
+              cacheState.map,
               k,
               MapValue.complete(
                 new MapKey(k),
@@ -259,76 +263,78 @@ export function makeWith_<Key, Environment, Error, Value>(
         }
 
         get(k: Key): T.IO<Error, Value> {
-          return pipe(
-            T.succeedWith(() => {
-              let key: MapKey<Key>
-              let promise: P.Promise<Error, Value>
-              let value = cacheState.map.get(k)
+          return T.suspend(() => {
+            let key: MapKey<Key>
+            let promise: P.Promise<Error, Value>
+            let value = O.toUndefined(HM.get_(cacheState.map, k))
 
-              if (!value) {
-                promise = P.unsafeMake(fiberId)
-                key = new MapKey(k)
-                if (cacheState.map.has(k)) {
-                  value = cacheState.map.get(k)
-                } else {
-                  cacheState.map.set(k, MapValue.pending(key, promise))
-                }
-
-                trackAccess(key)
-                trackMiss()
-                return lookupValueOf(
-                  k,
-                  environment,
-                  promise,
-                  timeToLive,
-                  cacheState,
-                  lookup
-                )
+            if (!value) {
+              promise = P.unsafeMake(fiberId)
+              key = new MapKey(k)
+              if (HM.has_(cacheState.map, k)) {
+                value = HM.unsafeGet_(cacheState.map, k)
               } else {
-                return pipe(
-                  value,
-                  T.matchTag({
-                    Pending: (_) => {
-                      trackAccess(_.key)
-                      trackHit()
-                      return P.await(_.promise)
-                    },
-                    Complete: (_) => {
-                      trackAccess(_.key)
-                      trackHit()
-                      if (hasExpired(_.timeToLive)) {
-                        if (cacheState.map.get(k) === value) {
-                          cacheState.map.delete(k)
-                        }
-                        return this.get(k)
-                      } else {
-                        return T.done(_.exit)
-                      }
-                    },
-                    Refreshing: (_) => {
-                      trackAccess(_.complete.key)
-                      trackHit()
-                      if (hasExpired(_.complete.timeToLive)) {
-                        return P.await(_.promise)
-                      } else {
-                        return T.done(_.complete.exit)
-                      }
-                    }
-                  })
+                cacheState.map = HM.set_(
+                  cacheState.map,
+                  k,
+                  MapValue.pending(key, promise)
                 )
               }
-            }),
-            T.flatten
-          )
+
+              trackAccess(key)
+              trackMiss()
+              return lookupValueOf(
+                k,
+                environment,
+                promise,
+                timeToLive,
+                cacheState,
+                lookup
+              )
+            } else {
+              return pipe(
+                value,
+                T.matchTag({
+                  Pending: (_) => {
+                    trackAccess(_.key)
+                    trackHit()
+                    return P.await(_.promise)
+                  },
+                  Complete: (_) => {
+                    trackAccess(_.key)
+                    trackHit()
+                    if (hasExpired(_.timeToLive)) {
+                      const found = O.toUndefined(HM.get_(cacheState.map, k))
+                      if (St.equals(found, value)) {
+                        cacheState.map = HM.remove_(cacheState.map, k)
+                      }
+                      return this.get(k)
+                    } else {
+                      return T.done(_.exit)
+                    }
+                  },
+                  Refreshing: (_) => {
+                    trackAccess(_.complete.key)
+                    trackHit()
+                    if (hasExpired(_.complete.timeToLive)) {
+                      return P.await(_.promise)
+                    } else {
+                      return T.done(_.complete.exit)
+                    }
+                  }
+                })
+              )
+            }
+          })
         }
 
         contains(key: Key): T.UIO<boolean> {
-          return T.succeedWith(() => cacheState.map.has(key))
+          return T.succeedWith(() => HM.has_(cacheState.map, key))
         }
 
         entryStats(key: Key): T.UIO<O.Option<EntryStats>> {
           return T.succeedWith(() => {
-            const value = cacheState.map.get(key)
+            const value = O.toUndefined(HM.get_(cacheState.map, key))
             if (value) {
               return matchTag_(value, {
                 Pending: () => O.none,
@@ -342,80 +348,79 @@ export function makeWith_<Key, Environment, Error, Value>(
         }
 
         refresh(key: Key): T.IO<Error, void> {
-          return pipe(
-            T.succeedWith(() => {
-              const promise = P.unsafeMake<Error, Value>(fiberId)
-              let value = cacheState.map.get(key)
+          return T.suspend(() => {
+            const promise = P.unsafeMake<Error, Value>(fiberId)
+            let value = O.toUndefined(HM.get_(cacheState.map, key))
 
-              if (!value) {
-                if (cacheState.map.has(key)) {
-                  value = cacheState.map.get(key)
-                } else {
-                  cacheState.map.set(key, MapValue.pending(new MapKey(key), promise))
-                }
-              }
-              if (!value) {
-                return T.asUnit(
-                  lookupValueOf(
-                    key,
-                    environment,
-                    promise,
-                    timeToLive,
-                    cacheState,
-                    lookup
-                  )
+            if (!value) {
+              if (HM.has_(cacheState.map, key)) {
+                value = HM.unsafeGet_(cacheState.map, key)
+              } else {
+                cacheState.map = HM.set_(
+                  cacheState.map,
+                  key,
+                  MapValue.pending(new MapKey(key), promise)
                 )
               }
-              return matchTag_(value, {
-                Pending: (_) => T.asUnit(P.await(_.promise)),
-                Complete: (_) => {
-                  if (hasExpired(_.timeToLive)) {
-                    if (cacheState.map.get(key) === value) {
-                      cacheState.map.delete(key)
-                    }
-                    return T.asUnit(this.get(key))
-                  } else {
-                    // Only trigger the lookup if we're still the current
-                    // value, `completedResult`
-                    return pipe(
-                      lookupValueOf(
-                        _.key.value,
-                        environment,
-                        promise,
-                        timeToLive,
-                        cacheState,
-                        lookup
-                      ),
-                      T.whenM(
-                        T.succeedWith(() => {
-                          const current = cacheState.map.get(key)
-                          if (current === _) {
-                            cacheState.map.set(key, MapValue.refreshing(promise, _))
-                            return true
-                          } else {
-                            return false
-                          }
-                        })
-                      )
-                    )
+            }
+            if (!value) {
+              return T.asUnit(
+                lookupValueOf(key, environment, promise, timeToLive, cacheState, lookup)
+              )
+            }
+            return matchTag_(value, {
+              Pending: (_) => T.asUnit(P.await(_.promise)),
+              Complete: (_) => {
+                if (hasExpired(_.timeToLive)) {
+                  const found = O.toUndefined(HM.get_(cacheState.map, key))
+                  if (St.equals(found, value)) {
+                    cacheState.map = HM.remove_(cacheState.map, key)
                   }
-                },
-                Refreshing: (_) => T.asUnit(P.await(_.promise))
-              })
-            }),
-            T.flatten
-          )
+                  return T.asUnit(this.get(key))
+                } else {
+                  // Only trigger the lookup if we're still the current
+                  // value, `completedResult`
+                  return pipe(
+                    lookupValueOf(
+                      _.key.value,
+                      environment,
+                      promise,
+                      timeToLive,
+                      cacheState,
+                      lookup
+                    ),
+                    T.whenM(
+                      T.succeedWith(() => {
+                        const current = O.toUndefined(HM.get_(cacheState.map, key))
+                        if (St.equals(current, _)) {
+                          cacheState.map = HM.set_(
+                            cacheState.map,
+                            key,
+                            MapValue.refreshing(promise, _)
+                          )
+                          return true
+                        } else {
+                          return false
+                        }
+                      })
+                    )
+                  )
+                }
+              },
+              Refreshing: (_) => T.asUnit(P.await(_.promise))
+            })
+          })
         }
 
         invalidate(key: Key): T.UIO<void> {
           return T.succeedWith(() => {
-            cacheState.map.delete(key)
+            cacheState.map = HM.remove_(cacheState.map, key)
           })
         }
 
         invalidateAll(): T.UIO<void> {
           return T.succeedWith(() => {
-            cacheState.map.clear()
+            cacheState.map = HM.make()
           })
         }
       }
@@ -470,14 +475,17 @@ export function setValue_<Key, Error, Value>(
  * Sets the value in the cache.
  *
  * @ets_data_first setValue_
- *
  */
 export function setValue<Key, Value>(k: Key, v: Value) {
   return <Error>(self: Cache<Key, Error, Value>): T.UIO<void> => setValue_(self, k, v)
 }
 
-/*
+/**
  * Returns the approximate values in the cache.
+ *
+ * **Note**: the ordering of values returned from the `Cache` is not guaranteed.
+ * If a specific ordering must be imposed, is should be applied after values
+ * are retrieved from the `Cache`.
  */
 export function values<Key, Error, Value>(
   self: Cache<Key, Error, Value>
@@ -488,6 +496,10 @@ export function values<Key, Error, Value>(
 
 /**
  * Returns the approximate entries in the cache.
+ *
+ * **Note**: the ordering of entries returned from the `Cache` is not
+ * guaranteed. If a specific ordering must be imposed, is should be applied
+ * after entries are retrieved from the `Cache`.
  */
 export function entries<Key, Error, Value>(
   self: Cache<Key, Error, Value>
@@ -667,7 +679,7 @@ function lookupValueOf<Key, Environment, Error, Value>(
         new Date(now + timeToLive(lookupResult))
       )
 
-      cacheState.map.set(key, completedResult)
+      cacheState.map = HM.set_(cacheState.map, key, completedResult)
 
       return pipe(
         promise,
@@ -676,8 +688,8 @@ function lookupValueOf<Key, Environment, Error, Value>(
       )
     }),
     T.onInterrupt(() => {
-      const value = cacheState.map.get(key)
-      cacheState.map.delete(key)
+      const value = O.toUndefined(HM.get_(cacheState.map, key))
+      cacheState.map = HM.remove_(cacheState.map, key)
       return T.as_(P.interrupt(promise), value)
     })
   )

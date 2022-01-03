@@ -1,5 +1,6 @@
 // ets_tracing: off
 
+import * as HM from "@effect-ts/core/Collections/Immutable/HashMap"
 import { AtomicBoolean } from "@effect-ts/core/Support/AtomicBoolean"
 import * as MutableQueue from "@effect-ts/core/Support/MutableQueue"
 
@@ -15,17 +16,19 @@ import type { MapValue } from "../MapValue"
  * The `CacheState` represents the mutable state underlying the cache.
  */
 export class CacheState<Key, Error, Value> {
+  map: HM.HashMap<Key, MapValue<Key, Error, Value>>
   hits: number
   misses: number
 
   constructor(
-    readonly map: Map<Key, MapValue<Key, Error, Value>>,
     readonly keys: KeySet<Key>,
     readonly accesses: MutableQueue.MutableQueue<MapKey<Key>>,
     readonly updating: AtomicBoolean,
+    map: HM.HashMap<Key, MapValue<Key, Error, Value>>,
     hits: number,
     misses: number
   ) {
+    this.map = map
     this.hits = hits
     this.misses = misses
   }
@@ -36,14 +39,14 @@ export class CacheState<Key, Error, Value> {
 // -----------------------------------------------------------------------------
 
 export function make<Key, Error, Value>(
-  map: Map<Key, MapValue<Key, Error, Value>>,
+  map: HM.HashMap<Key, MapValue<Key, Error, Value>>,
   keys: KeySet<Key>,
   accesses: MutableQueue.MutableQueue<MapKey<Key>>,
   updating: AtomicBoolean,
   hits: number,
   misses: number
 ): CacheState<Key, Error, Value> {
-  return new CacheState(map, keys, accesses, updating, hits, misses)
+  return new CacheState(keys, accesses, updating, map, hits, misses)
 }
 
 /**
@@ -51,7 +54,7 @@ export function make<Key, Error, Value>(
  */
 export function initial<Key, Error, Value>(): CacheState<Key, Error, Value> {
   return make(
-    new Map<Key, MapValue<Key, Error, Value>>(),
+    HM.make<Key, MapValue<Key, Error, Value>>(),
     new KeySet<Key>(),
     new MutableQueue.Unbounded<MapKey<Key>>(),
     new AtomicBoolean(false),
