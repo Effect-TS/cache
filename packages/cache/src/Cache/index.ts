@@ -1,5 +1,7 @@
 // ets_tracing: off
 
+import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
+import * as Tup from "@effect-ts/core/Collections/Immutable/Tuple"
 import * as T from "@effect-ts/core/Effect"
 import * as Ex from "@effect-ts/core/Effect/Exit"
 import * as P from "@effect-ts/core/Effect/Promise"
@@ -66,6 +68,16 @@ export abstract class CacheInternal<Key, Error, Value>
    * Sets the value in the cache.
    */
   abstract setValue(k: Key, v: Value): T.UIO<void>
+
+  /**
+   * Returns the approximate values in the cache.
+   */
+  abstract get values(): T.UIO<C.Chunk<Value>>
+
+  /**
+   * Returns the approximate entries in the cache.
+   */
+  abstract get entries(): T.UIO<C.Chunk<Tup.Tuple<[Key, Value]>>>
 
   /**
    * Returns statistics for this cache.
@@ -190,6 +202,22 @@ export function makeWith_<Key, Environment, Error, Value>(
         cacheState.misses = cacheState.misses + 1
       }
 
+      function* genEntries() {
+        for (const [k, v] of cacheState.map.entries()) {
+          if (v._tag === "Complete" && v.exit._tag === "Success") {
+            yield Tup.tuple(k, v.exit.value)
+          }
+        }
+      }
+
+      function* genValues() {
+        for (const v of cacheState.map.values()) {
+          if (v._tag === "Complete" && v.exit._tag === "Success") {
+            yield v.exit.value
+          }
+        }
+      }
+
       class _InternalCache extends CacheInternal<Key, Error, Value> {
         get size(): T.UIO<number> {
           return T.succeedWith(() => cacheState.map.size)
@@ -210,6 +238,14 @@ export function makeWith_<Key, Environment, Error, Value>(
               )
             )
           })
+        }
+
+        get values(): T.UIO<C.Chunk<Value>> {
+          return T.succeedWith(() => C.from(genValues()))
+        }
+
+        get entries(): T.UIO<C.Chunk<Tup.Tuple<[Key, Value]>>> {
+          return T.succeedWith(() => C.from(genEntries()))
         }
 
         get cacheStats(): T.UIO<CacheStats> {
@@ -438,6 +474,26 @@ export function setValue_<Key, Error, Value>(
  */
 export function setValue<Key, Value>(k: Key, v: Value) {
   return <Error>(self: Cache<Key, Error, Value>): T.UIO<void> => setValue_(self, k, v)
+}
+
+/*
+ * Returns the approximate values in the cache.
+ */
+export function values<Key, Error, Value>(
+  self: Cache<Key, Error, Value>
+): T.UIO<C.Chunk<Value>> {
+  concrete(self)
+  return self.values
+}
+
+/**
+ * Returns the approximate entries in the cache.
+ */
+export function entries<Key, Error, Value>(
+  self: Cache<Key, Error, Value>
+): T.UIO<C.Chunk<Tup.Tuple<[Key, Value]>>> {
+  concrete(self)
+  return self.entries
 }
 
 /**
