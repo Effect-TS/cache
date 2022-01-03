@@ -1,8 +1,10 @@
 // ets_tracing: off
 
+import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as HM from "@effect-ts/core/Collections/Immutable/HashMap"
+import * as Tup from "@effect-ts/core/Collections/Immutable/Tuple"
 import * as T from "@effect-ts/core/Effect"
-import type * as Ex from "@effect-ts/core/Effect/Exit"
+import * as Ex from "@effect-ts/core/Effect/Exit"
 import * as P from "@effect-ts/core/Effect/Promise"
 import { pipe } from "@effect-ts/core/Function"
 import * as O from "@effect-ts/core/Option"
@@ -65,73 +67,19 @@ export abstract class CacheInternal<Key, Error, Value>
   abstract get size(): T.UIO<number>
 
   /**
-   * Returns statistics for this cache.
+   * Sets the value in the cache.
    */
-  abstract get cacheStats(): T.UIO<CacheStats>
+  abstract setValue(k: Key, v: Value): T.UIO<void>
 
   /**
-   * Retrieves the value associated with the specified key if it exists.
-   * Otherwise computes the value with the lookup function, puts it in the
-   * cache, and returns it.
+   * Returns the approximate values in the cache.
    */
-  abstract get(key: Key): T.IO<Error, Value>
+  abstract get values(): T.UIO<C.Chunk<Value>>
 
   /**
-   * Returns whether a value associated with the specified key exists in the
-   * cache.
+   * Returns the approximate entries in the cache.
    */
-  abstract contains(key: Key): T.UIO<boolean>
-
-  /**
-   * Returns statistics for the specified entry.
-   */
-  abstract entryStats(key: Key): T.UIO<O.Option<EntryStats>>
-
-  /**
-   * Computes the value associated with the specified key, with the lookup
-   * function, and puts it in the cache. The difference between this and
-   * `get` method is that `refresh` triggers (re)computation of the value
-   * without invalidating it in the cache, so any request to the associated
-   * key can still be served while the value is being re-computed/retrieved
-   * by the lookup function. Additionally, `refresh` always triggers the
-   * lookup function, disregarding the last `Error`.
-   */
-  abstract refresh(key: Key): T.IO<Error, void>
-
-  /**
-   * Invalidates the value associated with the specified key.
-   */
-  abstract invalidate(key: Key): T.UIO<void>
-
-  /**
-   * Invalidates all values in the cache.
-   */
-  abstract invalidateAll(): T.UIO<void>
-}
-
-/**
- * A `Cache` is defined in terms of a lookup function that, given a key of
- * type `Key`, can either fail with an error of type `Error` or succeed with a
- * value of type `Value`. Getting a value from the cache will either return
- * the previous result of the lookup function if it is available or else
- * compute a new result with the lookup function, put it in the cache, and
- * return it.
- *
- * A cache also has a specified capacity and time to live. When the cache is
- * at capacity the least recently accessed values in the cache will be
- * removed to make room for new values. Getting a value with a life older than
- * the specified time to live will result in a new value being computed with
- * the lookup function and returned when available.
- *
- * The cache is safe for concurrent access. If multiple fibers attempt to get
- * the same key the lookup function will only be computed once and the result
- * will be returned to all fibers.
- */
-export abstract class CAache<Key, Error, Value> {
-  /**
-   * Returns the approximate number of values in the cache.
-   */
-  abstract get size(): T.UIO<number>
+  abstract get entries(): T.UIO<C.Chunk<Tup.Tuple<[Key, Value]>>>
 
   /**
    * Returns statistics for this cache.
@@ -257,9 +205,51 @@ export function makeWith_<Key, Environment, Error, Value>(
         cacheState.misses = cacheState.misses + 1
       }
 
+      function* genEntries() {
+        for (const [k, v] of cacheState.map) {
+          if (v._tag === "Complete" && v.exit._tag === "Success") {
+            yield Tup.tuple(k, v.exit.value)
+          }
+        }
+      }
+
+      function* genValues() {
+        for (const [, v] of cacheState.map) {
+          if (v._tag === "Complete" && v.exit._tag === "Success") {
+            yield v.exit.value
+          }
+        }
+      }
+
       class _InternalCache extends CacheInternal<Key, Error, Value> {
         get size(): T.UIO<number> {
           return T.succeedWith(() => cacheState.map.size)
+        }
+
+        setValue(k: Key, v: Value): T.UIO<void> {
+          return T.succeedWith(() => {
+            const now = Date.now()
+            const lookupResult = Ex.succeed(v) as Ex.Exit<Error, Value>
+
+            cacheState.map = HM.set_(
+              cacheState.map,
+              k,
+              MapValue.complete(
+                new MapKey(k),
+                lookupResult,
+                new EntryStats(new Date(now)),
+                new Date(now + timeToLive(lookupResult))
+              )
+            )
+          })
+        }
+
+        get values(): T.UIO<C.Chunk<Value>> {
+          return T.succeedWith(() => C.from(C.reverse(C.from(genValues()))))
+        }
+
+        get entries(): T.UIO<C.Chunk<Tup.Tuple<[Key, Value]>>> {
+          return T.succeedWith(() => C.from(C.reverse(C.from(genEntries()))))
         }
 
         get cacheStats(): T.UIO<CacheStats> {
@@ -467,6 +457,48 @@ export function makeWith<Error, Value>(
 export function size<Key, Error, Value>(self: Cache<Key, Error, Value>): T.UIO<number> {
   concrete(self)
   return self.size
+}
+
+/**
+ * Sets the value in the cache.
+ */
+export function setValue_<Key, Error, Value>(
+  self: Cache<Key, Error, Value>,
+  k: Key,
+  v: Value
+): T.UIO<void> {
+  concrete(self)
+  return self.setValue(k, v)
+}
+
+/**
+ * Sets the value in the cache.
+ *
+ * @ets_data_first setValue_
+ *
+ */
+export function setValue<Key, Value>(k: Key, v: Value) {
+  return <Error>(self: Cache<Key, Error, Value>): T.UIO<void> => setValue_(self, k, v)
+}
+
+/*
+ * Returns the approximate values in the cache.
+ */
+export function values<Key, Error, Value>(
+  self: Cache<Key, Error, Value>
+): T.UIO<C.Chunk<Value>> {
+  concrete(self)
+  return self.values
+}
+
+/**
+ * Returns the approximate entries in the cache.
+ */
+export function entries<Key, Error, Value>(
+  self: Cache<Key, Error, Value>
+): T.UIO<C.Chunk<Tup.Tuple<[Key, Value]>>> {
+  concrete(self)
+  return self.entries
 }
 
 /**

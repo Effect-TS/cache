@@ -1,4 +1,5 @@
 import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
+import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
 import * as T from "@effect-ts/core/Effect"
 import * as R from "@effect-ts/core/Effect/Random"
 import * as Ref from "@effect-ts/core/Effect/Ref"
@@ -208,6 +209,160 @@ describe("Cache", () => {
         expect(stats.hits).toBe(1)
         expect(stats.misses).toBe(2)
         expect(stats.size).toBe(2)
+      }))
+  })
+
+  describe("Setting Values", () => {
+    it("should insert the value into the cache", () =>
+      T.gen(function* (_) {
+        function inc(n: number): number {
+          return n * 10
+        }
+
+        function retrieve(multiplier: Ref.Ref<number>) {
+          return (key: number) =>
+            pipe(
+              multiplier,
+              Ref.updateAndGet(inc),
+              T.map((_) => key * _)
+            )
+        }
+
+        const seed = 1
+        const key = 123
+
+        const { value } = yield* _(
+          pipe(
+            T.do,
+            T.bind("ref", () => Ref.makeRef(seed)),
+            T.bind("cache", ({ ref }) =>
+              Cache.make(1, Number.MAX_SAFE_INTEGER, retrieve(ref))
+            ),
+            T.tap(({ cache }) => Cache.setValue_(cache, key, 15)),
+            T.tap(({ cache }) => Cache.get_(cache, key)),
+            T.bind("value", ({ cache }) => Cache.get_(cache, key))
+          )
+        )
+
+        expect(value).toBe(15)
+      }))
+
+    it("should update the cache with a new value", () =>
+      T.gen(function* (_) {
+        function inc(n: number): number {
+          return n * 10
+        }
+
+        function retrieve(multiplier: Ref.Ref<number>) {
+          return (key: number) =>
+            pipe(
+              multiplier,
+              Ref.updateAndGet(inc),
+              T.map((_) => key * _)
+            )
+        }
+
+        const seed = 1
+        const key = 123
+
+        const { value1, value2 } = yield* _(
+          pipe(
+            T.do,
+            T.bind("ref", () => Ref.makeRef(seed)),
+            T.bind("cache", ({ ref }) =>
+              Cache.make(1, Number.MAX_SAFE_INTEGER, retrieve(ref))
+            ),
+            T.bind("value1", ({ cache }) => Cache.get_(cache, key)),
+            T.tap(({ cache }) => Cache.setValue_(cache, key, 15)),
+            T.tap(({ cache }) => Cache.get_(cache, key)),
+            T.bind("value2", ({ cache }) => Cache.get_(cache, key))
+          )
+        )
+
+        expect(value1).toBe(key * 10)
+        expect(value2).toBe(15)
+      }))
+  })
+
+  describe("Entries", () => {
+    it("should return the current entries", () =>
+      T.gen(function* (_) {
+        function inc(n: number): number {
+          return n * 10
+        }
+
+        function retrieve(multiplier: Ref.Ref<number>) {
+          return (key: number) =>
+            pipe(
+              multiplier,
+              Ref.updateAndGet(inc),
+              T.map((_) => key * _)
+            )
+        }
+
+        const seed = 1
+        const key1 = 123
+        const key2 = 321
+
+        const { entries, value1, value2 } = yield* _(
+          pipe(
+            T.do,
+            T.bind("ref", () => Ref.makeRef(seed)),
+            T.bind("cache", ({ ref }) =>
+              Cache.make(5, Number.MAX_SAFE_INTEGER, retrieve(ref))
+            ),
+            T.bind("value1", ({ cache }) => Cache.get_(cache, key1)),
+            T.bind("value2", ({ cache }) => Cache.get_(cache, key2)),
+            T.bind("entries", ({ cache }) => Cache.entries(cache))
+          )
+        )
+
+        expect(value1).toBe(key1 * 10)
+        expect(value2).toBe(key2 * 100)
+        console.log(C.toArray(entries))
+        expect(C.toArray(entries)).toEqual([
+          Tp.tuple(key1, value1),
+          Tp.tuple(key2, value2)
+        ])
+      }))
+  })
+
+  describe("Values", () => {
+    it("should return the current values", () =>
+      T.gen(function* (_) {
+        function inc(n: number): number {
+          return n * 10
+        }
+
+        function retrieve(multiplier: Ref.Ref<number>) {
+          return (key: number) =>
+            pipe(
+              multiplier,
+              Ref.updateAndGet(inc),
+              T.map((_) => key * _)
+            )
+        }
+
+        const seed = 1
+        const key1 = 123
+        const key2 = 321
+
+        const { value1, value2, values } = yield* _(
+          pipe(
+            T.do,
+            T.bind("ref", () => Ref.makeRef(seed)),
+            T.bind("cache", ({ ref }) =>
+              Cache.make(5, Number.MAX_SAFE_INTEGER, retrieve(ref))
+            ),
+            T.bind("value1", ({ cache }) => Cache.get_(cache, key1)),
+            T.bind("value2", ({ cache }) => Cache.get_(cache, key2)),
+            T.bind("values", ({ cache }) => Cache.values(cache))
+          )
+        )
+
+        expect(value1).toBe(key1 * 10)
+        expect(value2).toBe(key2 * 100)
+        expect(C.toArray(values)).toEqual([value1, value2])
       }))
   })
 
