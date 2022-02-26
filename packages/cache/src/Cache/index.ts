@@ -11,13 +11,13 @@ import * as O from "@effect-ts/core/Option"
 import * as St from "@effect-ts/core/Structural"
 import { matchTag_ } from "@effect-ts/core/Utils"
 
-import { CacheStats } from "../CacheStats"
-import { EntryStats } from "../EntryStats"
-import * as CacheState from "../Internal/CacheState"
-import { MapKey } from "../Internal/MapKey"
-import * as MapValue from "../Internal/MapValue"
-import type { Lookup } from "../Lookup"
-import { CacheError, CacheKey, CacheValue } from "./primitives"
+import { CacheStats } from "../CacheStats/index.js"
+import { EntryStats } from "../EntryStats/index.js"
+import * as CacheState from "../Internal/CacheState/index.js"
+import { MapKey } from "../Internal/MapKey/index.js"
+import * as MapValue from "../Internal/MapValue/index.js"
+import type { Lookup } from "../Lookup/index.js"
+import { CacheError, CacheKey, CacheValue } from "./primitives.js"
 
 // -----------------------------------------------------------------------------
 // Model

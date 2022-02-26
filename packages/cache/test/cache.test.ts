@@ -8,8 +8,8 @@ import { pipe } from "@effect-ts/core/Function"
 import * as St from "@effect-ts/core/Structural"
 import * as TE from "@effect-ts/jest/Test"
 
-import * as Cache from "../src/Cache"
-import * as TestUtils from "./test-utils"
+import * as Cache from "../src/Cache/index.js"
+import * as TestUtils from "./test-utils.js"
 
 describe("Cache", () => {
   const { it } = TE.runtime()

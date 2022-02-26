@@ -4,9 +4,9 @@ import * as HM from "@effect-ts/core/Collections/Immutable/HashMap"
 import { AtomicBoolean } from "@effect-ts/core/Support/AtomicBoolean"
 import * as MutableQueue from "@effect-ts/core/Support/MutableQueue"
 
-import { KeySet } from "../KeySet"
-import type { MapKey } from "../MapKey"
-import type { MapValue } from "../MapValue"
+import { KeySet } from "../KeySet/index.js"
+import type { MapKey } from "../MapKey/index.js"
+import type { MapValue } from "../MapValue/index.js"
 
 // -----------------------------------------------------------------------------
 // Model

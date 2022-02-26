@@ -4,8 +4,8 @@ import { Tagged } from "@effect-ts/core/Case"
 import type { Exit } from "@effect-ts/core/Effect/Exit"
 import type { Promise } from "@effect-ts/core/Effect/Promise"
 
-import type { EntryStats } from "../../EntryStats"
-import type { MapKey } from "../MapKey"
+import type { EntryStats } from "../../EntryStats/index.js"
+import type { MapKey } from "../MapKey/index.js"
 
 // -----------------------------------------------------------------------------
 // Model

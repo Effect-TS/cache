@@ -2,7 +2,7 @@
 
 import * as St from "@effect-ts/core/Structural"
 
-import type { MapKey } from "../MapKey"
+import type { MapKey } from "../MapKey/index.js"
 
 // -----------------------------------------------------------------------------
 // Model
