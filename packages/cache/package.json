@@ -1,6 +1,6 @@
 {
   "name": "@effect/cache",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "license": "MIT",
   "repository": "https://github.com/Effect-TS/cache.git",
