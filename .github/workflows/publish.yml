@@ -1,28 +1,49 @@
-name: Node CI
+name: Test CI
 
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v1
-      - name: Use Node.js 12.x
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v3
         with:
-          node-version: 12.x
-      - name: npm install, build, and test
+          fetch-depth: 0
+      - name: Use Node.js 16.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          cache: yarn
+      - name: Install
         run: |
           npm install -g yarn
-          yarn install
-          yarn ci
-          yarn test
-          cp .ci.npmrc .npmrc
-          yarn lerna publish from-package --pre-dist-tag next --yes
+          yarn
         env:
           CI: "true"
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Build
+        run: |
+          yarn build
+        env:
+          CI: "true"
+      - name: Check Circular Dependencies
+        run: |
+          yarn circular
+        env:
+          CI: "true"
+      - name: Test
+        run: |
+          yarn test --run
+        env:
+          CI: "true"
+      - name: Create Version PR or Publish to NPM
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: node .github/changeset-version.cjs
+          publish: yarn release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.EFFECT_BOT_NPM }}
