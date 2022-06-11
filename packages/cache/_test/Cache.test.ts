@@ -56,7 +56,7 @@ describe.concurrent("Cache", () => {
         const salt = $(Random.nextInt)
         const cache = $(Cache.make(100, new Duration(Number.MAX_SAFE_INTEGER), hash(salt)))
         $(Effect.forEachDiscard(Chunk.range(1, 100), (n) => cache.get(n)))
-        $(cache.invalidateAll)
+        $(cache.invalidateAll())
         return $(cache.size)
       })
 

@@ -1,4 +1,15 @@
 // codegen:start {preset: barrel, include: ./operations/*.ts, prefix: "@effect/cache/Cache"}
+export * from "@effect/cache/Cache/operations/cacheStats"
+export * from "@effect/cache/Cache/operations/contains"
+export * from "@effect/cache/Cache/operations/entries"
+export * from "@effect/cache/Cache/operations/entryStats"
+export * from "@effect/cache/Cache/operations/get"
+export * from "@effect/cache/Cache/operations/invalidate"
+export * from "@effect/cache/Cache/operations/invalidateAll"
 export * from "@effect/cache/Cache/operations/make"
 export * from "@effect/cache/Cache/operations/makeWith"
+export * from "@effect/cache/Cache/operations/refresh"
+export * from "@effect/cache/Cache/operations/set"
+export * from "@effect/cache/Cache/operations/size"
+export * from "@effect/cache/Cache/operations/values"
 // codegen:end
