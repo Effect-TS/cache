@@ -51,6 +51,18 @@ export interface Cache<Key, Error, Value> {
    */
   readonly get: (key: Key) => Effect.IO<Error, Value>
   /**
+   * Associates the specified value to the specified key in the cache.
+   */
+  readonly set: (key: Key, value: Value) => Effect.UIO<void>
+  /**
+   * Returns an approximation of values in the cache.
+   */
+  readonly values: () => Effect.UIO<Chunk<Value>>
+  /**
+   * Returns an approximation of the entries in the cache.
+   */
+  readonly entries: () => Effect.UIO<Chunk<Tuple<[Key, Value]>>>
+  /**
    * Computes the value associated with the specified key, with the lookup
    * function, and puts it in the cache. The difference between this and
    * `get` method is that `refresh` triggers (re)computation of the value

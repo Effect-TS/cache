@@ -108,6 +108,46 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
     })
   }
 
+  set(key: Key, value: Value): Effect.UIO<void> {
+    return Effect.succeed(() => {
+      const now = this.clock.unsafeCurrentTime
+      const lookupResult = Exit.succeed(value)
+      this.cacheState.map.set(
+        key,
+        new Complete(
+          new MapKey(key),
+          lookupResult,
+          EntryStats(now),
+          now + this.timeToLive(lookupResult).millis
+        )
+      )
+    })
+  }
+
+  entries(): Effect.UIO<Chunk<Tuple<[Key, Value]>>> {
+    return Effect.succeed(() => {
+      const entries: Array<Tuple<[Key, Value]>> = []
+      for (const { tuple: [key, value] } of this.cacheState.map) {
+        if (value._tag === "Complete" && value.exit._tag === "Success") {
+          entries.push(Tuple(key, value.exit.value))
+        }
+      }
+      return Chunk.from(entries)
+    })
+  }
+
+  values(): Effect.UIO<Chunk<Value>> {
+    return Effect.succeed(() => {
+      const values: Array<Value> = []
+      for (const { tuple: [_, value] } of this.cacheState.map) {
+        if (value._tag === "Complete" && value.exit._tag === "Success") {
+          values.push(value.exit.value)
+        }
+      }
+      return Chunk.from(values)
+    })
+  }
+
   refresh(k: Key): Effect.IO<Error, void> {
     return Effect.suspendSucceed(() => {
       const deferred = Deferred.unsafeMake<Error, Value>(this.fiberId)
@@ -137,7 +177,7 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
           // Only trigger the lookup if we're still the current value
           return Effect.when(
             () => {
-              const current = this.cacheState.map.get(k)
+              const current = this.cacheState.map.get(k).value
               if (Equals.equals(current, value)) {
                 this.cacheState.map.set(
                   k,

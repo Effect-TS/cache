@@ -20,6 +20,11 @@ import { Effect } from "@effect/core/io/Effect/definition/base"
 /**
  * @tsplus global
  */
+import { Ref } from "@effect/core/io/Ref/definition"
+
+/**
+ * @tsplus global
+ */
 import { Exit } from "@effect/core/io/Exit/definition"
 
 /**
