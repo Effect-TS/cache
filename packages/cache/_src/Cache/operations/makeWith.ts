@@ -1,4 +1,4 @@
-import { CacheInternal } from "@effect/cache/Cache/operations/_internal/CacheInternal"
+import { CacheInternal } from "@effect/cache/Cache/_internal/CacheInternal"
 
 /**
  * Constructs a new cache with the specified capacity, time to live, and
@@ -12,8 +12,8 @@ export function makeWith<Key, Environment, Error, Value>(
   lookup: Lookup<Key, Environment, Error, Value>,
   timeToLive: (exit: Exit<Error, Value>) => Duration,
   __tsplusTrace?: string
-): Effect.RIO<Environment, Cache<Key, Error, Value>> {
-  return Effect.clock.flatMap((clock) =>
+): Effect<Environment, never, Cache<Key, Error, Value>> {
+  return Effect.clockWith((clock) =>
     Effect.environment<Environment>().flatMap((environment) =>
       Effect.fiberId.map((fiberId) =>
         new CacheInternal(

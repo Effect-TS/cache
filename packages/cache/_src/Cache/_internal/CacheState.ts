@@ -1,6 +1,6 @@
-import { KeySet } from "@effect/cache/Cache/operations/_internal/KeySet"
-import type { MapKey } from "@effect/cache/Cache/operations/_internal/MapKey"
-import type { MapValue } from "@effect/cache/Cache/operations/_internal/MapValue"
+import { KeySet } from "@effect/cache/Cache/_internal/KeySet"
+import type { MapKey } from "@effect/cache/Cache/_internal/MapKey"
+import type { MapValue } from "@effect/cache/Cache/_internal/MapValue"
 
 /**
  * The `CacheState` represents the mutable state underlying the cache.

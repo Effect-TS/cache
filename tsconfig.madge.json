@@ -1,26 +1,18 @@
 {
   "compilerOptions": {
-      "noEmit": true,
-      "allowJs": true,
-      "baseUrl": ".",
-      "paths": {
-          "@effect/cache": [
-              "./packages/cache/build/esm/index.js"
-          ],
-          "@effect/cache/test/*": [
-              "./packages/cache/build/test/*"
-          ],
-          "@effect/cache/examples/*": [
-              "./packages/cache/build/examples/*"
-          ],
-          "@effect/cache/*": [
-              "./packages/cache/build/esm/*"
-          ],
-      }
+    "noEmit": true,
+    "allowJs": true,
+    "baseUrl": ".",
+    "paths": {
+      "@effect/cache": ["./packages/cache/build/esm/index.js"],
+      "@effect/cache/test/*": ["./packages/cache/build/test/*"],
+      "@effect/cache/examples/*": ["./packages/cache/build/examples/*"],
+      "@effect/cache/*": ["./packages/cache/build/esm/*"]
+    }
   },
   "include": [
-      "./packages/cache/build/esm/**/*.js",
-      "./packages/cache/build/test/**/*.js",
-      "./packages/cache/build/examples/**/*.js"
+    "./packages/cache/build/esm/**/*.js",
+    "./packages/cache/build/test/**/*.js",
+    "./packages/cache/build/examples/**/*.js"
   ]
 }

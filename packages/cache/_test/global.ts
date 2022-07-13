@@ -1,4 +1,4 @@
-// import "@effect/cache"
+import "@effect/cache/global"
 import "@tsplus/stdlib/global"
 
 /**

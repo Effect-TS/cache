@@ -1,3 +1,6 @@
+export const CacheSym = Symbol.for("@effect/cache/Cache")
+export type CacheSym = typeof CacheSym
+
 export const CacheKeySym = Symbol.for("@effect/cache/Cache.Key")
 export type CacheKeySym = typeof CacheKeySym
 
@@ -28,9 +31,74 @@ export type CacheValueSym = typeof CacheValueSym
  * @tsplus type effect/cache/Cache
  */
 export interface Cache<Key, Error, Value> {
+  readonly [CacheSym]: CacheSym
   readonly [CacheKeySym]: (_: Key) => void
   readonly [CacheErrorSym]: () => Error
   readonly [CacheValueSym]: () => Value
+
+  /**
+   * Returns the approximate number of values in the cache.
+   */
+  readonly size: Effect<never, never, number>
+
+  /**
+   * Returns an approximation of the entries in the cache.
+   */
+  readonly entries: Effect<never, never, Chunk<Tuple<[Key, Value]>>>
+
+  /**
+   * Returns an approximation of the values in the cache.
+   */
+  readonly values: Effect<never, never, Chunk<Value>>
+
+  /**
+   * Returns statistics for this cache.
+   */
+  readonly cacheStats: Effect<never, never, CacheStats>
+
+  /**
+   * Returns statistics for the specified entry, if it exists.
+   */
+  readonly entryStats: (key: Key) => Effect<never, never, Maybe<EntryStats>>
+
+  /**
+   * Retrieves the value associated with the specified key if it exists.
+   * Otherwise computes the value with the lookup function, puts it in the
+   * cache, and returns it.
+   */
+  readonly get: (key: Key) => Effect<never, Error, Value>
+
+  /**
+   * Associates the specified value to the specified key in the cache.
+   */
+  readonly set: (key: Key, value: Value) => Effect<never, never, void>
+
+  /**
+   * Returns whether a value associated with the specified key exists in the
+   * cache.
+   */
+  readonly contains: (key: Key) => Effect<never, never, boolean>
+
+  /**
+   * Computes the value associated with the specified key, with the lookup
+   * function, and puts it in the cache. The difference between this and
+   * `get` method is that `refresh` triggers (re)computation of the value
+   * without invalidating it in the cache, so any request to the associated
+   * key can still be served while the value is being re-computed/retrieved
+   * by the lookup function. Additionally, `refresh` always triggers the
+   * lookup function, disregarding the last `Error`.
+   */
+  readonly refresh: (key: Key) => Effect<never, Error, void>
+
+  /**
+   * Invalidates the value associated with the specified key.
+   */
+  readonly invalidate: (key: Key) => Effect<never, never, void>
+
+  /**
+   * Invalidates all values in the cache.
+   */
+  readonly invalidateAll: Effect<never, never, void>
 }
 
 /**
