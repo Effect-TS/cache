@@ -11,21 +11,8 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "removeComments": false,
-    "plugins": [
-      {
-        "transform": "@effect-ts/tracing-plugin",
-        "moduleMap": {
-          "^src/(.*)": "(@effect-ts/cache): _src/$1"
-        }
-      }
-    ]
+    "removeComments": false
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "test",
-    "node_modules"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["test", "node_modules"]
 }

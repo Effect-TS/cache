@@ -1,11 +1,12 @@
-import { CacheErrorSym, CacheKeySym, CacheValueSym } from "@effect/cache/Cache/definition"
-import { CacheState } from "@effect/cache/Cache/operations/_internal/CacheState"
-import { MapKey } from "@effect/cache/Cache/operations/_internal/MapKey"
-import type { MapValue } from "@effect/cache/Cache/operations/_internal/MapValue"
-import { Complete, Pending, Refreshing } from "@effect/cache/Cache/operations/_internal/MapValue"
+import { CacheState } from "@effect/cache/Cache/_internal/CacheState"
+import { MapKey } from "@effect/cache/Cache/_internal/MapKey"
+import type { MapValue } from "@effect/cache/Cache/_internal/MapValue"
+import { Complete, Pending, Refreshing } from "@effect/cache/Cache/_internal/MapValue"
+import { CacheErrorSym, CacheKeySym, CacheSym, CacheValueSym } from "@effect/cache/Cache/definition"
 import { EmptyMutableQueue } from "@tsplus/stdlib/collections/mutable/MutableQueue"
 
 export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key, Error, Value> {
+  readonly [CacheSym]: CacheSym = CacheSym
   readonly [CacheKeySym]!: (_: Key) => void
   readonly [CacheErrorSym]!: () => Error
   readonly [CacheValueSym]!: () => Value
@@ -23,11 +24,35 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
     this.cacheState = CacheState.initial<Key, Error, Value>()
   }
 
-  get _size(): Effect.UIO<number> {
+  get size(): Effect<never, never, number> {
     return Effect.succeed(() => this.cacheState.map.size)
   }
 
-  get _cacheStats(): Effect.UIO<CacheStats> {
+  get entries(): Effect<never, never, Chunk<Tuple<[Key, Value]>>> {
+    return Effect.succeed(() => {
+      const entries: Array<Tuple<[Key, Value]>> = []
+      for (const { tuple: [key, value] } of this.cacheState.map) {
+        if (value._tag === "Complete" && value.exit._tag === "Success") {
+          entries.push(Tuple(key, value.exit.value))
+        }
+      }
+      return Chunk.from(entries)
+    })
+  }
+
+  get values(): Effect<never, never, Chunk<Value>> {
+    return Effect.succeed(() => {
+      const values: Array<Value> = []
+      for (const { tuple: [_, value] } of this.cacheState.map) {
+        if (value._tag === "Complete" && value.exit._tag === "Success") {
+          values.push(value.exit.value)
+        }
+      }
+      return Chunk.from(values)
+    })
+  }
+
+  get cacheStats(): Effect<never, never, CacheStats> {
     return Effect.succeed(CacheStats(
       this.cacheState.hits,
       this.cacheState.misses,
@@ -35,31 +60,27 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
     ))
   }
 
-  _entryStats(k: Key): Effect.UIO<Option<EntryStats>> {
+  entryStats(k: Key): Effect<never, never, Maybe<EntryStats>> {
     return Effect.succeed(() => {
       const value = this.cacheState.map.get(k).value
       if (value == null) {
-        return Option.none
+        return Maybe.none
       }
       switch (value._tag) {
         case "Pending": {
-          return Option.none
+          return Maybe.none
         }
         case "Complete": {
-          return Option.some(EntryStats(value.entryStats.loadedMillis))
+          return Maybe.some(EntryStats(value.entryStats.loadedMillis))
         }
         case "Refreshing": {
-          return Option.some(EntryStats(value.complete.entryStats.loadedMillis))
+          return Maybe.some(EntryStats(value.complete.entryStats.loadedMillis))
         }
       }
     })
   }
 
-  _contains(key: Key): Effect.UIO<boolean> {
-    return Effect.succeed(() => this.cacheState.map.has(key))
-  }
-
-  _get(k: Key): Effect.IO<Error, Value> {
+  get(k: Key): Effect<never, Error, Value> {
     return Effect.suspendSucceed(() => {
       let key: MapKey<Key> | undefined = undefined
       let deferred: Deferred<Error, Value> | undefined = undefined
@@ -74,32 +95,32 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
         }
       }
       if (value == null) {
-        this._trackAccess(key!)
-        this._trackMiss()
-        return this._lookupValueOf(k, deferred!)
+        this.trackAccess(key!)
+        this.trackMiss()
+        return this.lookupValueOf(k, deferred!)
       }
       switch (value._tag) {
         case "Pending": {
-          this._trackAccess(value.key)
-          this._trackHit()
+          this.trackAccess(value.key)
+          this.trackHit()
           return value.deferred.await()
         }
         case "Complete": {
-          this._trackAccess(value.key)
-          this._trackHit()
-          if (this._hasExpired(value.timeToLiveMillis)) {
+          this.trackAccess(value.key)
+          this.trackHit()
+          if (this.hasExpired(value.timeToLiveMillis)) {
             const found = this.cacheState.map.get(k).value
             if (Equals.equals(found, value)) {
               this.cacheState.map.remove(k)
             }
-            return this._get(k)
+            return this.get(k)
           }
           return Effect.done(value.exit)
         }
         case "Refreshing": {
-          this._trackAccess(value.complete.key)
-          this._trackHit()
-          if (this._hasExpired(value.complete.timeToLiveMillis)) {
+          this.trackAccess(value.complete.key)
+          this.trackHit()
+          if (this.hasExpired(value.complete.timeToLiveMillis)) {
             return value.deferred.await()
           }
           return Effect.done(value.complete.exit)
@@ -108,7 +129,7 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
     })
   }
 
-  _set(key: Key, value: Value): Effect.UIO<void> {
+  set(key: Key, value: Value): Effect.UIO<void> {
     return Effect.succeed(() => {
       const now = this.clock.unsafeCurrentTime
       const lookupResult = Exit.succeed(value)
@@ -124,31 +145,11 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
     })
   }
 
-  _entries(): Effect.UIO<Chunk<Tuple<[Key, Value]>>> {
-    return Effect.succeed(() => {
-      const entries: Array<Tuple<[Key, Value]>> = []
-      for (const { tuple: [key, value] } of this.cacheState.map) {
-        if (value._tag === "Complete" && value.exit._tag === "Success") {
-          entries.push(Tuple(key, value.exit.value))
-        }
-      }
-      return Chunk.from(entries)
-    })
+  contains(key: Key): Effect<never, never, boolean> {
+    return Effect.succeed(() => this.cacheState.map.has(key))
   }
 
-  _values(): Effect.UIO<Chunk<Value>> {
-    return Effect.succeed(() => {
-      const values: Array<Value> = []
-      for (const { tuple: [_, value] } of this.cacheState.map) {
-        if (value._tag === "Complete" && value.exit._tag === "Success") {
-          values.push(value.exit.value)
-        }
-      }
-      return Chunk.from(values)
-    })
-  }
-
-  _refresh(k: Key): Effect.IO<Error, void> {
+  refresh(k: Key): Effect<never, Error, void> {
     return Effect.suspendSucceed(() => {
       const deferred = Deferred.unsafeMake<Error, Value>(this.fiberId)
       let value = this.cacheState.map.get(k).value
@@ -160,19 +161,19 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
         }
       }
       if (value == null) {
-        return this._lookupValueOf(k, deferred).asUnit()
+        return this.lookupValueOf(k, deferred).unit()
       }
       switch (value._tag) {
         case "Pending": {
-          return value.deferred.await().asUnit()
+          return value.deferred.await().unit()
         }
         case "Complete": {
-          if (this._hasExpired(value.timeToLiveMillis)) {
+          if (this.hasExpired(value.timeToLiveMillis)) {
             const found = this.cacheState.map.get(k).value!
             if (Equals.equals(found, value)) {
               this.cacheState.map.remove(k)
             }
-            return this._get(k).asUnit()
+            return this.get(k).unit()
           }
           // Only trigger the lookup if we're still the current value
           return Effect.when(
@@ -187,35 +188,35 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
               }
               return false
             },
-            this._lookupValueOf(value.key.value, deferred)
-          ).asUnit()
+            this.lookupValueOf(value.key.value, deferred)
+          ).unit()
         }
         case "Refreshing": {
-          return value.deferred.await().asUnit()
+          return value.deferred.await().unit()
         }
       }
     })
   }
 
-  _invalidate(key: Key): Effect.UIO<void> {
+  invalidate(key: Key): Effect<never, never, void> {
     return Effect.succeed(() => {
       this.cacheState.map.remove(key)
     })
   }
 
-  _invalidateAll: Effect.UIO<void> = Effect.succeed(() => {
+  invalidateAll: Effect.UIO<void> = Effect.succeed(() => {
     this.cacheState.map = MutableHashMap.empty<Key, MapValue<Key, Error, Value>>()
   })
 
-  private _trackHit(): void {
+  private trackHit(): void {
     this.cacheState.hits = this.cacheState.hits + 1
   }
 
-  private _trackMiss(): void {
+  private trackMiss(): void {
     this.cacheState.misses = this.cacheState.misses + 1
   }
 
-  private _trackAccess(key: MapKey<Key>): void {
+  private trackAccess(key: MapKey<Key>): void {
     this.cacheState.accesses.offer(key)
     if (this.cacheState.updating.compareAndSet(false, true)) {
       let loop = true
@@ -244,7 +245,7 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
     }
   }
 
-  private _lookupValueOf(key: Key, deferred: Deferred<Error, Value>): Effect.IO<Error, Value> {
+  private lookupValueOf(key: Key, deferred: Deferred<Error, Value>): Effect.IO<Error, Value> {
     return this.lookup(key)
       .provideEnvironment(this.environment)
       .exit()
@@ -269,7 +270,7 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
       )
   }
 
-  private _hasExpired(timeToLiveMillis: number): boolean {
+  private hasExpired(timeToLiveMillis: number): boolean {
     return this.clock.unsafeCurrentTime > timeToLiveMillis
   }
 }

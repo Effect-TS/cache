@@ -56,7 +56,7 @@ describe.concurrent("Cache", () => {
         const salt = $(Random.nextInt)
         const cache = $(Cache.make(100, new Duration(Number.MAX_SAFE_INTEGER), hash(salt)))
         $(Effect.forEachDiscard(Chunk.range(1, 100), (n) => cache.get(n)))
-        $(cache.invalidateAll())
+        $(cache.invalidateAll)
         return $(cache.size)
       })
 
@@ -84,7 +84,7 @@ describe.concurrent("Cache", () => {
         const cache = $(Cache.make(5, new Duration(Number.MAX_SAFE_INTEGER), retrieve(ref)))
         const value1 = $(cache.get(key1))
         const value2 = $(cache.get(key2))
-        const entries = $(cache.entries())
+        const entries = $(cache.entries)
         return { value1, value2, entries }
       })
 
@@ -119,7 +119,7 @@ describe.concurrent("Cache", () => {
         const cache = $(Cache.make(5, new Duration(Number.MAX_SAFE_INTEGER), retrieve(ref)))
         const value1 = $(cache.get(key1))
         const value2 = $(cache.get(key2))
-        const values = $(cache.values())
+        const values = $(cache.values)
         return { value1, value2, values }
       })
 

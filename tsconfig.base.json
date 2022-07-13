@@ -1,65 +1,48 @@
 {
   "compilerOptions": {
-      "moduleDetection": "force",
-      "composite": true,
-      "downlevelIteration": true,
-      "resolveJsonModule": true,
-      "esModuleInterop": true,
-      "declaration": true,
-      "skipLibCheck": true,
-      "emitDecoratorMetadata": true,
-      "experimentalDecorators": true,
-      "preserveSymlinks": true,
-      "moduleResolution": "node",
-      "noEmit": false,
-      "lib": [
-          "ES2021"
-      ],
-      "sourceMap": true,
-      "declarationMap": true,
-      "strict": true,
-      "noImplicitReturns": false,
-      "noUnusedLocals": true,
-      "noUnusedParameters": false,
-      "noFallthroughCasesInSwitch": true,
-      "noEmitOnError": false,
-      "noErrorTruncation": false,
-      "allowJs": false,
-      "checkJs": false,
-      "forceConsistentCasingInFileNames": true,
-      "suppressImplicitAnyIndexErrors": true,
-      "stripInternal": true,
-      "noImplicitAny": true,
-      "noImplicitThis": true,
-      "noUncheckedIndexedAccess": true,
-      "strictNullChecks": true,
-      "baseUrl": ".",
-      "target": "ES2021",
-      "module": "ES6",
-      "incremental": true,
-      "removeComments": false,
-      "paths": {
-          "@effect/cache": [
-              "./packages/cache/_src/index.ts"
-          ],
-          "@effect/cache/test/*": [
-              "./packages/cache/_test/*"
-          ],
-          "@effect/cache/examples/*": [
-              "./packages/cache/_examples/*"
-          ],
-          "@effect/cache/*": [
-              "./packages/cache/_src/*"
-          ],
-      }
+    "moduleDetection": "force",
+    "composite": true,
+    "downlevelIteration": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "skipLibCheck": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "preserveSymlinks": true,
+    "moduleResolution": "node",
+    "noEmit": false,
+    "lib": ["ES2021"],
+    "sourceMap": true,
+    "declarationMap": true,
+    "strict": true,
+    "noImplicitReturns": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "noEmitOnError": false,
+    "noErrorTruncation": false,
+    "allowJs": false,
+    "checkJs": false,
+    "forceConsistentCasingInFileNames": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "stripInternal": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noUncheckedIndexedAccess": true,
+    "strictNullChecks": true,
+    "baseUrl": ".",
+    "target": "ES2021",
+    "module": "ES6",
+    "incremental": true,
+    "removeComments": false,
+    "paths": {
+      "@effect/cache": ["./packages/cache/_src/index.ts"],
+      "@effect/cache/test/*": ["./packages/cache/_test/*"],
+      "@effect/cache/examples/*": ["./packages/cache/_examples/*"],
+      "@effect/cache/*": ["./packages/cache/_src/*"]
+    }
   },
   "include": [],
-  "exclude": [
-      "node_modules",
-      "build",
-      "lib"
-  ],
-  "files": [
-      "./packages/cache/_src/global.d.ts"
-  ]
+  "exclude": ["node_modules", "build", "lib"]
 }

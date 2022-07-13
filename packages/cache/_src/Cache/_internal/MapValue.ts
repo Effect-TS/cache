@@ -1,4 +1,4 @@
-import type { MapKey } from "@effect/cache/Cache/operations/_internal/MapKey"
+import type { MapKey } from "@effect/cache/Cache/_internal/MapKey"
 
 /**
  * A `MapValue` represents a value in the cache. A value may either be

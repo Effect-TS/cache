@@ -27,8 +27,8 @@
     }
   },
   "dependencies": {
-    "@effect/core": "*",
-    "@tsplus/stdlib": "*"
+    "@effect/core": "^0.0.7",
+    "@tsplus/stdlib": "^0.2.2"
   },
   "exports": {
     ".": {
@@ -50,8 +50,6 @@
   "config": {
     "side": [],
     "modules": [],
-    "global": [
-      "_src/global.d.ts"
-    ]
+    "global": []
   }
 }
