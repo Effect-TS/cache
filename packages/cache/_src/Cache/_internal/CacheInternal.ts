@@ -129,7 +129,7 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
     })
   }
 
-  set(key: Key, value: Value): Effect.UIO<void> {
+  set(key: Key, value: Value): Effect<never, never, void> {
     return Effect.succeed(() => {
       const now = this.clock.unsafeCurrentTime
       const lookupResult = Exit.succeed(value)
@@ -161,11 +161,11 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
         }
       }
       if (value == null) {
-        return this.lookupValueOf(k, deferred).unit()
+        return this.lookupValueOf(k, deferred).unit
       }
       switch (value._tag) {
         case "Pending": {
-          return value.deferred.await().unit()
+          return value.deferred.await().unit
         }
         case "Complete": {
           if (this.hasExpired(value.timeToLiveMillis)) {
@@ -173,7 +173,7 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
             if (Equals.equals(found, value)) {
               this.cacheState.map.remove(k)
             }
-            return this.get(k).unit()
+            return this.get(k).unit
           }
           // Only trigger the lookup if we're still the current value
           return Effect.when(
@@ -189,10 +189,10 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
               return false
             },
             this.lookupValueOf(value.key.value, deferred)
-          ).unit()
+          ).unit
         }
         case "Refreshing": {
-          return value.deferred.await().unit()
+          return value.deferred.await().unit
         }
       }
     })
@@ -204,7 +204,7 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
     })
   }
 
-  invalidateAll: Effect.UIO<void> = Effect.succeed(() => {
+  invalidateAll: Effect<never, never, void> = Effect.succeed(() => {
     this.cacheState.map = MutableHashMap.empty<Key, MapValue<Key, Error, Value>>()
   })
 
@@ -248,7 +248,7 @@ export class CacheInternal<Key, Environment, Error, Value> implements Cache<Key,
   private lookupValueOf(key: Key, deferred: Deferred<Error, Value>): Effect.IO<Error, Value> {
     return this.lookup(key)
       .provideEnvironment(this.environment)
-      .exit()
+      .exit
       .flatMap((exit) => {
         const now = this.clock.unsafeCurrentTime
         const entryStats = EntryStats(now)

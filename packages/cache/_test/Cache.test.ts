@@ -1,7 +1,7 @@
 import { RuntimeError } from "@effect/core/io/Cause"
 
 function hash(x: number) {
-  return (y: number): Effect.UIO<number> => Effect.succeed(Hash.number(x ^ y))
+  return (y: number): Effect<never, never, number> => Effect.succeed(Hash.number(x ^ y))
 }
 
 describe.concurrent("Cache", () => {
@@ -253,13 +253,13 @@ describe.concurrent("Cache", () => {
       const program = Do(($) => {
         const ref = $(Ref.make(seed))
         const cache = $(Cache.make(1, new Duration(Number.MAX_SAFE_INTEGER), retrieve(ref)))
-        const failure1 = $(cache.get(key).either())
+        const failure1 = $(cache.get(key).either)
         $(cache.refresh(key))
-        const value1 = $(cache.get(key).either())
+        const value1 = $(cache.get(key).either)
         $(cache.refresh(key))
-        const failure2 = $(cache.refresh(key).either())
+        const failure2 = $(cache.refresh(key).either)
         $(cache.refresh(key))
-        const value2 = $(cache.get(key).either())
+        const value2 = $(cache.get(key).either)
         return { failure1, value1, failure2, value2 }
       })
 
