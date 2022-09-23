@@ -1,14 +1,5 @@
-export const CacheSym = Symbol.for("@effect/cache/Cache")
-export type CacheSym = typeof CacheSym
-
-export const CacheKeySym = Symbol.for("@effect/cache/Cache.Key")
-export type CacheKeySym = typeof CacheKeySym
-
-export const CacheErrorSym = Symbol.for("@effect/cache/Cache.Error")
-export type CacheErrorSym = typeof CacheErrorSym
-
-export const CacheValueSym = Symbol.for("@effect/cache/Cache.Value")
-export type CacheValueSym = typeof CacheValueSym
+export const CacheURI = Symbol.for("@effect/cache/Cache")
+export type CacheURI = typeof CacheURI
 
 /**
  * A `Cache` is defined in terms of a lookup function that, given a key of
@@ -31,10 +22,11 @@ export type CacheValueSym = typeof CacheValueSym
  * @tsplus type effect/cache/Cache
  */
 export interface Cache<Key, Error, Value> {
-  readonly [CacheSym]: CacheSym
-  readonly [CacheKeySym]: (_: Key) => void
-  readonly [CacheErrorSym]: () => Error
-  readonly [CacheValueSym]: () => Value
+  readonly [CacheURI]: {
+    readonly _Key: (_: Key) => void
+    readonly _Error: (_: never) => Error
+    readonly _Value: (_: never) => Value
+  }
 
   /**
    * Returns the approximate number of values in the cache.
