@@ -27,8 +27,8 @@
     }
   },
   "dependencies": {
-    "@effect/core": "^0.0.8",
-    "@tsplus/stdlib": "^0.2.2"
+    "@effect/core": "^0.0.14",
+    "@tsplus/stdlib": "^0.2.6"
   },
   "exports": {
     ".": {

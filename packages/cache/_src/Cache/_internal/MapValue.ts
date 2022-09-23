@@ -13,7 +13,6 @@ export type MapValue<Key, Error, Value> =
 
 export class Pending<Key, Error, Value> {
   readonly _tag = "Pending"
-
   constructor(
     readonly key: MapKey<Key>,
     readonly deferred: Deferred<Error, Value>
@@ -22,7 +21,6 @@ export class Pending<Key, Error, Value> {
 
 export class Complete<Key, Error, Value> {
   readonly _tag = "Complete"
-
   constructor(
     readonly key: MapKey<Key>,
     readonly exit: Exit<Error, Value>,
@@ -33,7 +31,6 @@ export class Complete<Key, Error, Value> {
 
 export class Refreshing<Key, Error, Value> {
   readonly _tag = "Refreshing"
-
   constructor(
     readonly deferred: Deferred<Error, Value>,
     readonly complete: Complete<Key, Error, Value>

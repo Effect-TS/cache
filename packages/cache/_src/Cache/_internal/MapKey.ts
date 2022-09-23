@@ -1,5 +1,5 @@
-export const MapKeySym = Symbol.for("@effect/cache/Cache/MapKey")
-export type MapKeySym = typeof MapKeySym
+export const MapKeyURI = Symbol.for("@effect/cache/Cache/MapKey")
+export type MapKeyURI = typeof MapKeyURI
 
 /**
  * A `MapKey` represents a key in the cache. It contains mutable references
@@ -7,7 +7,7 @@ export type MapKeySym = typeof MapKeySym
  * implementation of a sorted set of keys.
  */
 export class MapKey<Key> implements Equals {
-  readonly [MapKeySym]: MapKeySym = MapKeySym
+  readonly [MapKeyURI]: MapKeyURI = MapKeyURI
 
   previous: MapKey<Key> | undefined = undefined
   next: MapKey<Key> | undefined = undefined
@@ -39,5 +39,5 @@ export class MapKey<Key> implements Equals {
  * @tsplus static effect/cache/Cache/MapKey.Ops is
  */
 export function isMapKey(u: unknown): u is MapKey<unknown> {
-  return typeof u === "object" && u != null && MapKeySym in u
+  return typeof u === "object" && u != null && MapKeyURI in u
 }
