@@ -1,5 +1,11 @@
 # @effect/cache
 
+## 0.0.4
+
+### Patch Changes
+
+- [#118](https://github.com/Effect-TS/cache/pull/118) [`8a6e6db`](https://github.com/Effect-TS/cache/commit/8a6e6db5fb88a632cd28a142f3352bc8be736d8a) Thanks [@IMax153](https://github.com/IMax153)! - upgrade dependencies
+
 ## 0.0.3
 
 ### Patch Changes
