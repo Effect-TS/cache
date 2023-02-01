@@ -4,15 +4,9 @@
     "allowJs": true,
     "baseUrl": ".",
     "paths": {
-      "@effect/cache": ["./packages/cache/build/esm/index.js"],
-      "@effect/cache/test/*": ["./packages/cache/build/test/*"],
-      "@effect/cache/examples/*": ["./packages/cache/build/examples/*"],
-      "@effect/cache/*": ["./packages/cache/build/esm/*"]
+      "@effect/cache": ["./build/esm/index.js"],
+      "@effect/cache/*": ["./build/esm/*"]
     }
   },
-  "include": [
-    "./packages/cache/build/esm/**/*.js",
-    "./packages/cache/build/test/**/*.js",
-    "./packages/cache/build/examples/**/*.js"
-  ]
+  "include": ["./build/esm/**/*.js"]
 }

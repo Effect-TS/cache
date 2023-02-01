@@ -29,7 +29,7 @@
     "stripInternal": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
-    "noUncheckedIndexedAccess": true,
+    "noUncheckedIndexedAccess": false,
     "strictNullChecks": true,
     "baseUrl": ".",
     "target": "ES2021",
@@ -37,11 +37,20 @@
     "incremental": true,
     "removeComments": false,
     "paths": {
-      "@effect/cache": ["./packages/cache/_src/index.ts"],
-      "@effect/cache/test/*": ["./packages/cache/_test/*"],
-      "@effect/cache/examples/*": ["./packages/cache/_examples/*"],
-      "@effect/cache/*": ["./packages/cache/_src/*"]
-    }
+      "@effect/io/*": ["./node_modules/@effect/io/src/*"],
+      "@effect/cache": ["./src/index.ts"],
+      "@effect/cache/test/*": ["./test/*"],
+      "@effect/cache/examples/*": ["./examples/*"],
+      "@effect/cache/*": ["./src/*"]
+    },
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "diagnostics": {
+          "1002": "none"
+        }
+      }
+    ]
   },
   "include": [],
   "exclude": ["node_modules", "build", "lib"]
