@@ -1,10 +1,10 @@
 import type * as EntryStats from "@effect/cache/EntryStats"
 import type * as MapKey from "@effect/cache/internal_effect_untraced/mapKey"
+import * as Data from "@effect/data/Data"
+import * as MutableRef from "@effect/data/MutableRef"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import type * as Scope from "@effect/io/Scope"
-import * as Data from "@fp-ts/data/Data"
-import * as MutableRef from "@fp-ts/data/MutableRef"
 
 /**
  * A `MapValue` represents a value in the cache. A value may either be

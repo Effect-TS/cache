@@ -1,8 +1,8 @@
 import type * as EntryStats from "@effect/cache/EntryStats"
 import type * as MapKey from "@effect/cache/internal_effect_untraced/mapKey"
+import * as Data from "@effect/data/Data"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Exit from "@effect/io/Exit"
-import * as Data from "@fp-ts/data/Data"
 
 /**
  * A `MapValue` represents a value in the cache. A value may either be

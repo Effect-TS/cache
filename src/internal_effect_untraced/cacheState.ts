@@ -1,9 +1,9 @@
 import * as KeySet from "@effect/cache/internal_effect_untraced/keySet"
 import type * as MapKey from "@effect/cache/internal_effect_untraced/mapKey"
 import type * as MapValue from "@effect/cache/internal_effect_untraced/mapValue"
-import * as MutableHashMap from "@fp-ts/data/MutableHashMap"
-import * as MutableQueue from "@fp-ts/data/MutableQueue"
-import * as MutableRef from "@fp-ts/data/MutableRef"
+import * as MutableHashMap from "@effect/data/MutableHashMap"
+import * as MutableQueue from "@effect/data/MutableQueue"
+import * as MutableRef from "@effect/data/MutableRef"
 
 /**
  * The `CacheState` represents the mutable state underlying the cache.

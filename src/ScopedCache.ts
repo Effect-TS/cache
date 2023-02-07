@@ -5,11 +5,11 @@ import type * as CacheStats from "@effect/cache/CacheStats"
 import type * as EntryStats from "@effect/cache/EntryStats"
 import * as internal from "@effect/cache/internal_effect_untraced/scoped/cache"
 import type * as ScopedLookup from "@effect/cache/ScopedLookup"
+import type * as Duration from "@effect/data/Duration"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as Scope from "@effect/io/Scope"
 import type * as Option from "@fp-ts/core/Option"
-import type * as Duration from "@fp-ts/data/Duration"
 
 /**
  * @since 1.0.0
