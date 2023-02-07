@@ -1,4 +1,7 @@
 import * as ObservableResource from "@effect/cache/test/utils/ObservableResource"
+import * as Chunk from "@effect/data/Chunk"
+import * as Duration from "@effect/data/Duration"
+import * as HashMap from "@effect/data/HashMap"
 import * as Effect from "@effect/io/Effect"
 import * as TestServices from "@effect/io/internal_effect_untraced/testing/testServices"
 import * as Ref from "@effect/io/Ref"
@@ -6,9 +9,6 @@ import * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import { identity, pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
-import * as Chunk from "@fp-ts/data/Chunk"
-import * as Duration from "@fp-ts/data/Duration"
-import * as HashMap from "@fp-ts/data/HashMap"
 
 export interface WatchableLookup<Key, Error, Value> {
   (key: Key): Effect.Effect<Scope.Scope, Error, Value>
