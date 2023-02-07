@@ -1,5 +1,11 @@
 # @effect/cache
 
+## 0.1.1
+
+### Patch Changes
+
+- [#122](https://github.com/Effect-TS/cache/pull/122) [`86ca84f`](https://github.com/Effect-TS/cache/commit/86ca84ff47de987433eee143e5c94af139b26dd3) Thanks [@IMax153](https://github.com/IMax153)! - migrate from @fp-ts/data to @effect/data
+
 ## 0.1.0
 
 ### Minor Changes
