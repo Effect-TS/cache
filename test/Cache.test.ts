@@ -5,17 +5,16 @@ import * as Data from "@effect/data/Data"
 import * as Duration from "@effect/data/Duration"
 import * as Hash from "@effect/data/Hash"
 import * as Cause from "@effect/io/Cause"
-import * as Debug from "@effect/io/Debug"
 import * as Effect from "@effect/io/Effect"
 import * as Ref from "@effect/io/Ref"
 import * as Either from "@fp-ts/core/Either"
-import { pipe } from "@fp-ts/core/Function"
+import { dual, pipe } from "@fp-ts/core/Function"
 import * as fc from "fast-check"
 import { describe, expect } from "vitest"
 
-const hash = Debug.dual<
-  (x: number, y: number) => Effect.Effect<never, never, number>,
-  (y: number) => (x: number) => Effect.Effect<never, never, number>
+const hash = dual<
+  (y: number) => (x: number) => Effect.Effect<never, never, number>,
+  (x: number, y: number) => Effect.Effect<never, never, number>
 >(2, (x, y) => Effect.sync(() => Hash.number(x ^ y)))
 
 describe("Cache", () => {

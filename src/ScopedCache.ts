@@ -141,8 +141,8 @@ export const cacheStats: <Key, Error, Value>(
  * @category combinators
  */
 export const contains: {
-  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<never, never, boolean>
   <Key>(key: Key): <Error, Value>(self: ScopedCache<Key, Error, Value>) => Effect.Effect<never, never, boolean>
+  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<never, never, boolean>
 } = internal.contains
 
 /**
@@ -152,15 +152,15 @@ export const contains: {
  * @category getters
  */
 export const entryStats: {
-  <Key, Error, Value>(
-    self: ScopedCache<Key, Error, Value>,
-    key: Key
-  ): Effect.Effect<never, never, Option.Option<EntryStats.EntryStats>>
   <Key>(
     key: Key
   ): <Error, Value>(
     self: ScopedCache<Key, Error, Value>
   ) => Effect.Effect<never, never, Option.Option<EntryStats.EntryStats>>
+  <Key, Error, Value>(
+    self: ScopedCache<Key, Error, Value>,
+    key: Key
+  ): Effect.Effect<never, never, Option.Option<EntryStats.EntryStats>>
 } = internal.entryStats
 
 /**
@@ -172,8 +172,8 @@ export const entryStats: {
  * @category combinators
  */
 export const get: {
-  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<Scope.Scope, Error, Value>
   <Key>(key: Key): <Error, Value>(self: ScopedCache<Key, Error, Value>) => Effect.Effect<Scope.Scope, Error, Value>
+  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<Scope.Scope, Error, Value>
 } = internal.get
 
 /**
@@ -183,8 +183,8 @@ export const get: {
  * @category combinators
  */
 export const invalidate: {
-  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<never, never, void>
   <Key>(key: Key): <Error, Value>(self: ScopedCache<Key, Error, Value>) => Effect.Effect<never, never, void>
+  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<never, never, void>
 } = internal.invalidate
 
 /**
@@ -209,8 +209,8 @@ export const invalidateAll: <Key, Error, Value>(
  * @category combinators
  */
 export const refresh: {
-  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<never, Error, void>
   <Key>(key: Key): <Error, Value>(self: ScopedCache<Key, Error, Value>) => Effect.Effect<never, Error, void>
+  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<never, Error, void>
 } = internal.refresh
 
 /**
