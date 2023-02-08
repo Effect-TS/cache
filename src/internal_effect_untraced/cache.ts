@@ -405,33 +405,33 @@ export const cacheStats = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const contains = Debug.dualWithTrace<
-  <Key, Error, Value>(self: Cache.Cache<Key, Error, Value>, key: Key) => Effect.Effect<never, never, boolean>,
-  <Key>(key: Key) => <Error, Value>(self: Cache.Cache<Key, Error, Value>) => Effect.Effect<never, never, boolean>
+  <Key>(key: Key) => <Error, Value>(self: Cache.Cache<Key, Error, Value>) => Effect.Effect<never, never, boolean>,
+  <Key, Error, Value>(self: Cache.Cache<Key, Error, Value>, key: Key) => Effect.Effect<never, never, boolean>
 >(2, (trace) => (self, key) => self.contains(key).traced(trace))
 
 /** @internal */
 export const entryStats = Debug.dualWithTrace<
-  <Key, Error, Value>(
-    self: Cache.Cache<Key, Error, Value>,
-    key: Key
-  ) => Effect.Effect<never, never, Option.Option<EntryStats.EntryStats>>,
   <Key>(
     key: Key
   ) => <Error, Value>(
     self: Cache.Cache<Key, Error, Value>
+  ) => Effect.Effect<never, never, Option.Option<EntryStats.EntryStats>>,
+  <Key, Error, Value>(
+    self: Cache.Cache<Key, Error, Value>,
+    key: Key
   ) => Effect.Effect<never, never, Option.Option<EntryStats.EntryStats>>
 >(2, (trace) => (self, key) => self.entryStats(key).traced(trace))
 
 /** @internal */
 export const get = Debug.dualWithTrace<
-  <Key, Error, Value>(self: Cache.Cache<Key, Error, Value>, key: Key) => Effect.Effect<never, Error, Value>,
-  <Key>(key: Key) => <Error, Value>(self: Cache.Cache<Key, Error, Value>) => Effect.Effect<never, Error, Value>
+  <Key>(key: Key) => <Error, Value>(self: Cache.Cache<Key, Error, Value>) => Effect.Effect<never, Error, Value>,
+  <Key, Error, Value>(self: Cache.Cache<Key, Error, Value>, key: Key) => Effect.Effect<never, Error, Value>
 >(2, (trace) => (self, key) => self.get(key).traced(trace))
 
 /** @internal */
 export const invalidate = Debug.dualWithTrace<
-  <Key, Error, Value>(self: Cache.Cache<Key, Error, Value>, key: Key) => Effect.Effect<never, never, void>,
-  <Key>(key: Key) => <Error, Value>(self: Cache.Cache<Key, Error, Value>) => Effect.Effect<never, never, void>
+  <Key>(key: Key) => <Error, Value>(self: Cache.Cache<Key, Error, Value>) => Effect.Effect<never, never, void>,
+  <Key, Error, Value>(self: Cache.Cache<Key, Error, Value>, key: Key) => Effect.Effect<never, never, void>
 >(2, (trace) => (self, key) => self.invalidate(key).traced(trace))
 
 /** @internal */
@@ -442,20 +442,20 @@ export const invalidateAll = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const refresh = Debug.dualWithTrace<
-  <Key, Error, Value>(self: Cache.Cache<Key, Error, Value>, key: Key) => Effect.Effect<never, Error, void>,
-  <Key>(key: Key) => <Error, Value>(self: Cache.Cache<Key, Error, Value>) => Effect.Effect<never, Error, void>
+  <Key>(key: Key) => <Error, Value>(self: Cache.Cache<Key, Error, Value>) => Effect.Effect<never, Error, void>,
+  <Key, Error, Value>(self: Cache.Cache<Key, Error, Value>, key: Key) => Effect.Effect<never, Error, void>
 >(2, (trace) => (self, key) => self.refresh(key).traced(trace))
 
 export const set = Debug.dualWithTrace<
-  <Key, Error, Value>(
-    self: Cache.Cache<Key, Error, Value>,
-    key: Key,
-    value: Value
-  ) => Effect.Effect<never, never, void>,
   <Key>(
     key: Key
   ) => <Error, Value>(
     self: Cache.Cache<Key, Error, Value>,
+    value: Value
+  ) => Effect.Effect<never, never, void>,
+  <Key, Error, Value>(
+    self: Cache.Cache<Key, Error, Value>,
+    key: Key,
     value: Value
   ) => Effect.Effect<never, never, void>
 >(3, (trace) => (self, key, value) => self.set(key, value).traced(trace))

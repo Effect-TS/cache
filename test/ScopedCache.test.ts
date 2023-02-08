@@ -8,7 +8,6 @@ import * as Duration from "@effect/data/Duration"
 import * as Hash from "@effect/data/Hash"
 import * as HashMap from "@effect/data/HashMap"
 import * as Cause from "@effect/io/Cause"
-import * as Debug from "@effect/io/Debug"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
@@ -18,18 +17,18 @@ import * as Ref from "@effect/io/Ref"
 import * as Schedule from "@effect/io/Schedule"
 import * as Scope from "@effect/io/Scope"
 import * as Either from "@fp-ts/core/Either"
-import { identity, pipe } from "@fp-ts/core/Function"
+import { dual, identity, pipe } from "@fp-ts/core/Function"
 import * as fc from "fast-check"
 import { describe, expect } from "vitest"
 
-const hash = Debug.dual<
-  (x: number, y: number) => number,
-  (y: number) => (x: number) => number
+const hash = dual<
+  (y: number) => (x: number) => number,
+  (x: number, y: number) => number
 >(2, (x, y) => Hash.number(x ^ y))
 
-const hashEffect = Debug.dual<
-  (x: number, y: number) => Effect.Effect<never, never, number>,
-  (y: number) => (x: number) => Effect.Effect<never, never, number>
+const hashEffect = dual<
+  (y: number) => (x: number) => Effect.Effect<never, never, number>,
+  (x: number, y: number) => Effect.Effect<never, never, number>
 >(2, (x, y) => Effect.sync(() => hash(x, y)))
 
 describe.concurrent("ScopedCache", () => {

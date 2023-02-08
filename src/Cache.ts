@@ -187,8 +187,8 @@ export const cacheStats: <Key, Error, Value>(
  * @category combinators
  */
 export const contains: {
-  <Key, Error, Value>(self: Cache<Key, Error, Value>, key: Key): Effect.Effect<never, never, boolean>
   <Key>(key: Key): <Error, Value>(self: Cache<Key, Error, Value>) => Effect.Effect<never, never, boolean>
+  <Key, Error, Value>(self: Cache<Key, Error, Value>, key: Key): Effect.Effect<never, never, boolean>
 } = internal.contains
 
 /**
@@ -198,15 +198,13 @@ export const contains: {
  * @category combinators
  */
 export const entryStats: {
+  <Key>(
+    key: Key
+  ): <Error, Value>(self: Cache<Key, Error, Value>) => Effect.Effect<never, never, Option.Option<EntryStats.EntryStats>>
   <Key, Error, Value>(
     self: Cache<Key, Error, Value>,
     key: Key
   ): Effect.Effect<never, never, Option.Option<EntryStats.EntryStats>>
-  <Key>(
-    key: Key
-  ): <Error, Value>(
-    self: Cache<Key, Error, Value>
-  ) => Effect.Effect<never, never, Option.Option<EntryStats.EntryStats>>
 } = internal.entryStats
 
 /**
@@ -218,8 +216,8 @@ export const entryStats: {
  * @category combinators
  */
 export const get: {
-  <Key, Error, Value>(self: Cache<Key, Error, Value>, key: Key): Effect.Effect<never, Error, Value>
   <Key>(key: Key): <Error, Value>(self: Cache<Key, Error, Value>) => Effect.Effect<never, Error, Value>
+  <Key, Error, Value>(self: Cache<Key, Error, Value>, key: Key): Effect.Effect<never, Error, Value>
 } = internal.get
 
 /**
@@ -229,8 +227,8 @@ export const get: {
  * @category combinators
  */
 export const invalidate: {
-  <Key, Error, Value>(self: Cache<Key, Error, Value>, key: Key): Effect.Effect<never, never, void>
   <Key>(key: Key): <Error, Value>(self: Cache<Key, Error, Value>) => Effect.Effect<never, never, void>
+  <Key, Error, Value>(self: Cache<Key, Error, Value>, key: Key): Effect.Effect<never, never, void>
 } = internal.invalidate
 
 /**
@@ -255,8 +253,8 @@ export const invalidateAll: <Key, Error, Value>(self: Cache<Key, Error, Value>) 
  * @category combinators
  */
 export const refresh: {
-  <Key, Error, Value>(self: Cache<Key, Error, Value>, key: Key): Effect.Effect<never, Error, void>
   <Key>(key: Key): <Error, Value>(self: Cache<Key, Error, Value>) => Effect.Effect<never, Error, void>
+  <Key, Error, Value>(self: Cache<Key, Error, Value>, key: Key): Effect.Effect<never, Error, void>
 } = internal.refresh
 
 /**
@@ -266,8 +264,8 @@ export const refresh: {
  * @category combinators
  */
 export const set: {
-  <Key, Error, Value>(self: Cache<Key, Error, Value>, key: Key, value: Value): Effect.Effect<never, never, void>
   <Key>(key: Key): <Error, Value>(self: Cache<Key, Error, Value>, value: Value) => Effect.Effect<never, never, void>
+  <Key, Error, Value>(self: Cache<Key, Error, Value>, key: Key, value: Value): Effect.Effect<never, never, void>
 } = internal.set
 
 /**
